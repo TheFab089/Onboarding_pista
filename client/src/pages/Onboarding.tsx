@@ -12,10 +12,15 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Check } from "lucide-react";
 import ProcessDiagramCRM from "@/components/ProcessDiagramCRM";
 import ProcessAnalysisCRM from "@/components/ProcessAnalysisCRM";
+import OdooModuleRecommendation from "@/components/OdooModuleRecommendation";
+import WorkflowAutomation from "@/components/WorkflowAutomation";
+import RolesPermissions from "@/components/RolesPermissions";
+import Integrations from "@/components/Integrations";
+import GoLivePlanning from "@/components/GoLivePlanning";
 import DocumentUpload from "@/components/DocumentUpload";
 import AIChatbot from "@/components/AIChatbot";
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 11;
 
 interface ProcessStep {
   id: string;
@@ -76,6 +81,20 @@ export default function Onboarding() {
     examples: string;
     importance: number;
   }>>([]);
+
+  // Step 6: Odoo Module Recommendations (auto-generated, no state needed)
+  
+  // Step 7: Workflow Automation
+  const [automations, setAutomations] = useState<any[]>([]);
+  
+  // Step 8: Roles & Permissions
+  const [roles, setRoles] = useState<any[]>([]);
+  
+  // Step 9: Integrations
+  const [integrations, setIntegrations] = useState<any[]>([]);
+  
+  // Step 10: Go-Live Planning
+  const [goLivePlan, setGoLivePlan] = useState<any>({});
 
   const createSessionMutation = trpc.onboarding.createSession.useMutation();
   const updateSessionMutation = trpc.onboarding.updateSession.useMutation();
@@ -699,8 +718,94 @@ export default function Onboarding() {
               <DocumentUpload sessionId={sessionId} />
               
               <Button 
-                onClick={handleComplete} 
+                onClick={() => setCurrentStep(7)} 
                 className="w-full bg-accent hover:bg-accent/90"
+              >
+                Weiter zu Modul-Empfehlungen
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 7: Odoo Module Recommendations */}
+        {currentStep === 7 && (
+          <div className="space-y-6">
+            <OdooModuleRecommendation 
+              selectedCRMStages={selectedProcesses.map(p => p.id)}
+              selectedProjectTypes={selectedProjectTypes}
+            />
+            <Button 
+              onClick={() => setCurrentStep(8)} 
+              className="w-full bg-accent hover:bg-accent/90"
+            >
+              Weiter zu Workflow-Automatisierung
+            </Button>
+          </div>
+        )}
+
+        {/* Step 8: Workflow Automation */}
+        {currentStep === 8 && (
+          <div className="space-y-6">
+            <WorkflowAutomation onAutomationsChange={setAutomations} />
+            <Button 
+              onClick={() => setCurrentStep(9)} 
+              className="w-full bg-accent hover:bg-accent/90"
+            >
+              Weiter zu Rollen & Berechtigungen
+            </Button>
+          </div>
+        )}
+
+        {/* Step 9: Roles & Permissions */}
+        {currentStep === 9 && (
+          <div className="space-y-6">
+            <RolesPermissions onRolesChange={setRoles} />
+            <Button 
+              onClick={() => setCurrentStep(10)} 
+              className="w-full bg-accent hover:bg-accent/90"
+            >
+              Weiter zu Integrationen
+            </Button>
+          </div>
+        )}
+
+        {/* Step 10: Integrations */}
+        {currentStep === 10 && (
+          <div className="space-y-6">
+            <Integrations onIntegrationsChange={setIntegrations} />
+            <div className="flex gap-4">
+              <Button 
+                variant="outline"
+                onClick={() => setCurrentStep(9)}
+                className="flex-1"
+              >
+                Zurück
+              </Button>
+              <Button 
+                onClick={() => setCurrentStep(11)} 
+                className="flex-1 bg-accent hover:bg-accent/90"
+              >
+                Weiter zu Go-Live Planung
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 11: Go-Live Planning */}
+        {currentStep === 11 && (
+          <div className="space-y-6">
+            <GoLivePlanning onPlanChange={setGoLivePlan} />
+            <div className="flex gap-4">
+              <Button 
+                variant="outline"
+                onClick={() => setCurrentStep(10)}
+                className="flex-1"
+              >
+                Zurück
+              </Button>
+              <Button 
+                onClick={handleComplete} 
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 disabled={createValueMutation.isPending}
               >
                 {createValueMutation.isPending ? (
@@ -710,8 +815,8 @@ export default function Onboarding() {
                 )}
                 Onboarding abschließen
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {sessionId && <AIChatbot sessionId={sessionId} />}
