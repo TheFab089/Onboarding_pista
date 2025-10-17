@@ -11,13 +11,14 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-50">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-3">
-            <img src="/pista-logo.png" alt="PISTA Consulting" className="h-10" />
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">PISTA<span className="text-accent">.</span></h1>
-              <p className="text-xs text-muted-foreground tracking-wider">consulting</p>
-            </div>
-          </div>
+          <img src="/pista-logo.png" alt="PISTA Consulting" className="h-10" />
+          <Button 
+            onClick={() => navigate("/admin")} 
+            variant="outline"
+            size="sm"
+          >
+            Admin Dashboard
+          </Button>
         </div>
       </header>
 
