@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Check } from "lucide-react";
+import ProcessDiagram from "@/components/ProcessDiagram";
+import ProcessAnalysis from "@/components/ProcessAnalysis";
 
 const TOTAL_STEPS = 5;
+
+interface ProcessStep {
+  id: string;
+  name: string;
+  description: string;
+  benefit: string;
+  icon: string;
+}
+
+interface ProcessAnalysisData {
+  processId: string;
+  currentState: string;
+  painPoints: string;
+  desiredState: string;
+  priority: "low" | "medium" | "high";
+}
 
 export default function Onboarding() {
   const [, navigate] = useLocation();
@@ -32,17 +50,10 @@ export default function Onboarding() {
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
   
-  // Step 3: Business Processes
-  const [processes, setProcesses] = useState<Array<{
-    id?: string;
-    processName: string;
-    category: string;
-    description: string;
-    currentState: string;
-    painPoints: string;
-    desiredState: string;
-    priority: "low" | "medium" | "high";
-  }>>([]);
+  // Step 3: Business Processes - New approach
+  const [selectedProcesses, setSelectedProcesses] = useState<ProcessStep[]>([]);
+  const [processAnalyses, setProcessAnalyses] = useState<ProcessAnalysisData[]>([]);
+  const [showProcessAnalysis, setShowProcessAnalysis] = useState(false);
   
   // Step 4: Goals and Wishes
   const [goals, setGoals] = useState<Array<{
@@ -116,48 +127,42 @@ export default function Onboarding() {
     }
   };
 
-  const handleAddProcess = () => {
-    setProcesses([...processes, {
-      processName: "",
-      category: "",
-      description: "",
-      currentState: "",
-      painPoints: "",
-      desiredState: "",
-      priority: "medium",
-    }]);
+  const handleProcessesConfirmed = (processes: ProcessStep[]) => {
+    setSelectedProcesses(processes);
+    setShowProcessAnalysis(true);
   };
 
-  const handleRemoveProcess = (index: number) => {
-    setProcesses(processes.filter((_, i) => i !== index));
-  };
-
-  const handleSaveProcesses = async () => {
-    if (processes.length === 0) {
-      toast.error("Bitte fügen Sie mindestens einen Prozess hinzu");
-      return;
-    }
-    
-    const hasEmptyNames = processes.some(p => !p.processName.trim());
-    if (hasEmptyNames) {
-      toast.error("Bitte geben Sie für alle Prozesse einen Namen ein");
-      return;
-    }
+  const handleProcessAnalysisComplete = async (analyses: ProcessAnalysisData[]) => {
+    setProcessAnalyses(analyses);
     
     try {
-      for (const process of processes) {
+      // Save each process analysis to database
+      for (let i = 0; i < selectedProcesses.length; i++) {
+        const process = selectedProcesses[i];
+        const analysis = analyses[i];
+        
         await createProcessMutation.mutateAsync({
           sessionId,
-          ...process,
+          processName: process.name,
+          category: "Hauptprozess",
+          description: process.description,
+          currentState: analysis.currentState,
+          painPoints: analysis.painPoints,
+          desiredState: analysis.desiredState,
+          priority: analysis.priority,
         });
       }
       
       await updateSessionMutation.mutateAsync({ sessionId, currentStep: 4 });
       setCurrentStep(4);
-      toast.success("Prozesse gespeichert");
+      toast.success("Prozessanalyse gespeichert");
     } catch (error) {
       toast.error("Fehler beim Speichern der Prozesse");
     }
+  };
+
+  const handleBackToProcessSelection = () => {
+    setShowProcessAnalysis(false);
   };
 
   const handleAddGoal = () => {
@@ -421,157 +426,16 @@ export default function Onboarding() {
           </Card>
         )}
 
-        {currentStep === 3 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Geschäftsprozesse</CardTitle>
-              <CardDescription>
-                Dokumentieren Sie Ihre wichtigsten Geschäftsprozesse und wo Verbesserungsbedarf besteht.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {processes.map((process, index) => (
-                <Card key={index} className="border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Prozess {index + 1}</CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveProcess(index)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label>Prozessname *</Label>
-                        <Input
-                          value={process.processName}
-                          onChange={(e) => {
-                            const newProcesses = [...processes];
-                            newProcesses[index].processName = e.target.value;
-                            setProcesses(newProcesses);
-                          }}
-                          placeholder="z.B. Auftragsabwicklung"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Kategorie</Label>
-                        <Input
-                          value={process.category}
-                          onChange={(e) => {
-                            const newProcesses = [...processes];
-                            newProcesses[index].category = e.target.value;
-                            setProcesses(newProcesses);
-                          }}
-                          placeholder="z.B. Vertrieb, Verwaltung"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Beschreibung</Label>
-                      <Textarea
-                        value={process.description}
-                        onChange={(e) => {
-                          const newProcesses = [...processes];
-                          newProcesses[index].description = e.target.value;
-                          setProcesses(newProcesses);
-                        }}
-                        placeholder="Kurze Beschreibung des Prozesses..."
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Aktueller Zustand</Label>
-                      <Textarea
-                        value={process.currentState}
-                        onChange={(e) => {
-                          const newProcesses = [...processes];
-                          newProcesses[index].currentState = e.target.value;
-                          setProcesses(newProcesses);
-                        }}
-                        placeholder="Wie läuft der Prozess aktuell ab?"
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Schmerzpunkte</Label>
-                      <Textarea
-                        value={process.painPoints}
-                        onChange={(e) => {
-                          const newProcesses = [...processes];
-                          newProcesses[index].painPoints = e.target.value;
-                          setProcesses(newProcesses);
-                        }}
-                        placeholder="Welche Probleme gibt es? Was läuft nicht optimal?"
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Gewünschter Zustand</Label>
-                      <Textarea
-                        value={process.desiredState}
-                        onChange={(e) => {
-                          const newProcesses = [...processes];
-                          newProcesses[index].desiredState = e.target.value;
-                          setProcesses(newProcesses);
-                        }}
-                        placeholder="Wie sollte der Prozess idealerweise ablaufen?"
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Priorität</Label>
-                      <Select
-                        value={process.priority}
-                        onValueChange={(value: "low" | "medium" | "high") => {
-                          const newProcesses = [...processes];
-                          newProcesses[index].priority = value;
-                          setProcesses(newProcesses);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Niedrig</SelectItem>
-                          <SelectItem value="medium">Mittel</SelectItem>
-                          <SelectItem value="high">Hoch</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              <Button
-                variant="outline"
-                onClick={handleAddProcess}
-                className="w-full"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Prozess hinzufügen
-              </Button>
-              
-              <Button 
-                onClick={handleSaveProcesses} 
-                className="w-full bg-primary hover:bg-primary/90"
-                disabled={createProcessMutation.isPending}
-              >
-                {createProcessMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Weiter
-              </Button>
-            </CardContent>
-          </Card>
+        {currentStep === 3 && !showProcessAnalysis && (
+          <ProcessDiagram onProcessesConfirmed={handleProcessesConfirmed} />
+        )}
+
+        {currentStep === 3 && showProcessAnalysis && (
+          <ProcessAnalysis
+            processes={selectedProcesses}
+            onComplete={handleProcessAnalysisComplete}
+            onBack={handleBackToProcessSelection}
+          />
         )}
 
         {currentStep === 4 && (
