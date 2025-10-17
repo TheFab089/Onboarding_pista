@@ -73,7 +73,7 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
       <CardHeader className="pb-3 border-b flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <CardTitle className="text-lg">AI Assistent</CardTitle>
+          <CardTitle className="text-lg">Pisti</CardTitle>
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -101,9 +101,9 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
             {!chatHistory || chatHistory.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6">
                 <MessageCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="font-semibold mb-2">Willkommen beim AI Assistenten!</h3>
+                <h3 className="font-semibold mb-2">Hallo, ich bin Pisti! 👋</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Ich helfe Ihnen beim Ausfüllen des Onboarding-Formulars. Stellen Sie mir Fragen!
+                  Ihr digitaler Begleiter für das Onboarding. Fragen Sie mich alles!
                 </p>
                 <div className="space-y-2 w-full">
                   <button
@@ -128,7 +128,9 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                {chatHistory.map((msg) => (
+                {[...chatHistory].sort((a, b) => 
+                  new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
+                ).map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
@@ -142,7 +144,7 @@ export default function AIChatbot({ sessionId }: AIChatbotProps) {
                     >
                       {msg.role === "assistant" && (
                         <Badge variant="outline" className="mb-2 text-xs">
-                          AI Assistent
+                          Pisti
                         </Badge>
                       )}
                       <p className="text-sm whitespace-pre-wrap">{msg.message}</p>

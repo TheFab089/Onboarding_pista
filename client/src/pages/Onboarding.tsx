@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Check } from "lucide-react";
-import ProcessDiagram from "@/components/ProcessDiagram";
-import ProcessAnalysis from "@/components/ProcessAnalysis";
+import ProcessDiagramCRM from "@/components/ProcessDiagramCRM";
+import ProcessAnalysisCRM from "@/components/ProcessAnalysisCRM";
 import DocumentUpload from "@/components/DocumentUpload";
 import AIChatbot from "@/components/AIChatbot";
 
@@ -52,9 +52,11 @@ export default function Onboarding() {
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
   
-  // Step 3: Business Processes - New approach
+  // Step 3: Business Processes (CRM + Projects)
   const [selectedProcesses, setSelectedProcesses] = useState<ProcessStep[]>([]);
+  const [selectedProjectTypes, setSelectedProjectTypes] = useState<string[]>([]);
   const [processAnalyses, setProcessAnalyses] = useState<ProcessAnalysisData[]>([]);
+  const [projectTypeData, setProjectTypeData] = useState<any[]>([]);
   const [showProcessAnalysis, setShowProcessAnalysis] = useState(false);
   
   // Step 4: Goals and Wishes
@@ -129,13 +131,15 @@ export default function Onboarding() {
     }
   };
 
-  const handleProcessesConfirmed = (processes: ProcessStep[]) => {
+  const handleProcessesConfirmed = (processes: ProcessStep[], projectTypes: string[]) => {
     setSelectedProcesses(processes);
+    setSelectedProjectTypes(projectTypes);
     setShowProcessAnalysis(true);
   };
 
-  const handleProcessAnalysisComplete = async (analyses: ProcessAnalysisData[]) => {
+  const handleProcessAnalysisComplete = async (analyses: ProcessAnalysisData[], projTypeData: any[]) => {
     setProcessAnalyses(analyses);
+    setProjectTypeData(projTypeData);
     
     try {
       // Save each process analysis to database
@@ -423,12 +427,13 @@ export default function Onboarding() {
         )}
 
         {currentStep === 3 && !showProcessAnalysis && (
-          <ProcessDiagram onProcessesConfirmed={handleProcessesConfirmed} />
+          <ProcessDiagramCRM onConfirm={handleProcessesConfirmed} />
         )}
 
         {currentStep === 3 && showProcessAnalysis && (
-          <ProcessAnalysis
+          <ProcessAnalysisCRM
             processes={selectedProcesses}
+            projectTypes={selectedProjectTypes}
             onComplete={handleProcessAnalysisComplete}
             onBack={handleBackToProcessSelection}
           />
