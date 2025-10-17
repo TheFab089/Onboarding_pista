@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { 
   Building2, 
   Target, 
@@ -18,11 +20,35 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
-  Download
+  Download,
+  FileText,
+  LogOut
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [exportingPDF, setExportingPDF] = useState(false);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === "PISTA" && password === "admin") {
+      setIsAuthenticated(true);
+      setLoginError("");
+    } else {
+      setLoginError("Ungültige Anmeldedaten");
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setUsername("");
+    setPassword("");
+    setLoginError("");
+  };
 
   const { data: sessions, isLoading: sessionsLoading } = trpc.onboarding.getAllSessions.useQuery();
   const { data: sessionData } = trpc.onboarding.getSession.useQuery(
@@ -46,7 +72,7 @@ export default function AdminDashboard() {
     { enabled: !!selectedSessionId }
   );
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string | null) => {
     switch (priority) {
       case "high": return "destructive";
       case "medium": return "default";
@@ -64,21 +90,19 @@ export default function AdminDashboard() {
     }
   };
 
-  const exportToMarkdown = () => {
-    if (!sessionData || !companyInfo) return;
+  const generateMarkdownContent = () => {
+    if (!sessionData || !companyInfo) return "";
 
     let markdown = `# Onboarding Report: ${companyInfo.companyName}\n\n`;
     markdown += `**Erstellt am:** ${new Date(sessionData.createdAt!).toLocaleDateString('de-DE')}\n\n`;
     markdown += `---\n\n`;
 
-    // Client Info
     markdown += `## Kontaktinformationen\n\n`;
     markdown += `- **Name:** ${sessionData.clientName}\n`;
     if (sessionData.clientEmail) markdown += `- **E-Mail:** ${sessionData.clientEmail}\n`;
     if (sessionData.clientPhone) markdown += `- **Telefon:** ${sessionData.clientPhone}\n`;
     markdown += `\n`;
 
-    // Company Info
     markdown += `## Firmeninformationen\n\n`;
     markdown += `- **Firmenname:** ${companyInfo.companyName}\n`;
     if (companyInfo.industry) markdown += `- **Branche:** ${companyInfo.industry}\n`;
@@ -89,7 +113,6 @@ export default function AdminDashboard() {
     if (companyInfo.description) markdown += `\n**Beschreibung:**\n${companyInfo.description}\n`;
     markdown += `\n`;
 
-    // Processes
     if (processes && processes.length > 0) {
       markdown += `## Geschäftsprozesse\n\n`;
       processes.forEach((process, index) => {
@@ -103,7 +126,6 @@ export default function AdminDashboard() {
       });
     }
 
-    // Goals
     if (goals && goals.length > 0) {
       markdown += `## Ziele & Wünsche\n\n`;
       goals.forEach((goal, index) => {
@@ -115,7 +137,6 @@ export default function AdminDashboard() {
       });
     }
 
-    // Values
     if (values && values.length > 0) {
       markdown += `## Unternehmenswerte\n\n`;
       values.forEach((value, index) => {
@@ -126,17 +147,111 @@ export default function AdminDashboard() {
       });
     }
 
-    // Download
+    return markdown;
+  };
+
+  const exportToPDF = async () => {
+    if (!sessionData || !companyInfo) return;
+    
+    setExportingPDF(true);
+    try {
+      const markdown = generateMarkdownContent();
+      
+      const filename = `onboarding-${((companyInfo.companyName || 'export') as string).replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}`;
+      const response = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          markdown,
+          filename
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('PDF export error:', error);
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
+  const exportToMarkdown = () => {
+    if (!sessionData || !companyInfo) return;
+
+    const markdown = generateMarkdownContent();
+    if (!markdown) return;
+
+    const filename = `onboarding-${((companyInfo.companyName || 'export') as string).replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}`;
     const blob = new Blob([markdown], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `onboarding-${companyInfo.companyName?.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.md`;
+    a.download = `${filename}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center py-12 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <img src="/pista-logo.png" alt="PISTA Consulting" className="h-12" />
+            </div>
+            <CardTitle className="text-2xl">Admin Dashboard</CardTitle>
+            <CardDescription>Bitte melden Sie sich an</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="username">Benutzername</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="PISTA"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Passwort</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              {loginError && (
+                <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                  {loginError}
+                </div>
+              )}
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
+                Anmelden
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -150,6 +265,10 @@ export default function AdminDashboard() {
               <p className="text-xs text-muted-foreground">Onboarding Auswertung</p>
             </div>
           </div>
+          <Button onClick={handleLogout} variant="outline" size="sm">
+            <LogOut className="mr-2 h-4 w-4" />
+            Abmelden
+          </Button>
         </div>
       </header>
 
@@ -173,25 +292,16 @@ export default function AdminDashboard() {
                       key={session.id}
                       className={`cursor-pointer transition-all ${
                         selectedSessionId === session.id
-                          ? 'border-2 border-accent'
-                          : 'hover:border-accent/50'
+                          ? "ring-2 ring-accent"
+                          : "hover:bg-gray-50"
                       }`}
                       onClick={() => setSelectedSessionId(session.id)}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold truncate">{session.clientName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(session.createdAt!).toLocaleDateString('de-DE')}
-                            </p>
-                          </div>
-                          {session.completedAt ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0" />
-                          )}
-                        </div>
+                      <CardContent className="pt-4">
+                        <p className="font-medium text-sm">{session.clientName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(session.createdAt!).toLocaleDateString('de-DE')}
+                        </p>
                       </CardContent>
                     </Card>
                   ))}
@@ -238,219 +348,209 @@ export default function AdminDashboard() {
                           )}
                         </CardDescription>
                       </div>
-                      <Button onClick={exportToMarkdown} variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button onClick={exportToMarkdown} variant="outline">
+                          <Download className="mr-2 h-4 w-4" />
+                          Markdown
+                        </Button>
+                        <Button onClick={exportToPDF} variant="outline" disabled={exportingPDF}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          {exportingPDF ? "PDF wird erstellt..." : "PDF"}
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                 </Card>
 
+                {/* Tabs */}
                 <Tabs defaultValue="company" className="w-full">
                   <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="company">
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Firma
-                    </TabsTrigger>
-                    <TabsTrigger value="processes">
-                      <Target className="h-4 w-4 mr-2" />
-                      Prozesse
-                    </TabsTrigger>
-                    <TabsTrigger value="goals">
-                      <Lightbulb className="h-4 w-4 mr-2" />
-                      Ziele
-                    </TabsTrigger>
-                    <TabsTrigger value="values">
-                      <Users className="h-4 w-4 mr-2" />
-                      Werte
-                    </TabsTrigger>
+                    <TabsTrigger value="company">Firma</TabsTrigger>
+                    <TabsTrigger value="processes">Prozesse</TabsTrigger>
+                    <TabsTrigger value="goals">Ziele</TabsTrigger>
+                    <TabsTrigger value="values">Werte</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="company" className="space-y-4">
+                  {/* Company Info Tab */}
+                  <TabsContent value="company">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Firmeninformationen</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                          <Building2 className="h-5 w-5" />
+                          Firmeninformationen
+                        </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         {companyInfo ? (
-                          <>
-                            <div className="grid grid-cols-2 gap-4">
-                              {companyInfo.industry && (
-                                <div>
-                                  <p className="text-sm font-semibold text-muted-foreground">Branche</p>
-                                  <p>{companyInfo.industry}</p>
-                                </div>
-                              )}
-                              {companyInfo.foundedYear && (
-                                <div>
-                                  <p className="text-sm font-semibold text-muted-foreground">Gründungsjahr</p>
-                                  <p>{companyInfo.foundedYear}</p>
-                                </div>
-                              )}
-                              {companyInfo.numberOfEmployees && (
-                                <div>
-                                  <p className="text-sm font-semibold text-muted-foreground">Mitarbeiter</p>
-                                  <p>{companyInfo.numberOfEmployees}</p>
-                                </div>
-                              )}
-                              {companyInfo.location && (
-                                <div>
-                                  <p className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
-                                    <MapPin className="h-3 w-3" />
-                                    Standort
-                                  </p>
-                                  <p>{companyInfo.location}</p>
-                                </div>
-                              )}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm text-muted-foreground">Firmenname</p>
+                              <p className="font-medium">{companyInfo.companyName}</p>
                             </div>
+                            {companyInfo.industry && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Branche</p>
+                                <p className="font-medium">{companyInfo.industry}</p>
+                              </div>
+                            )}
+                            {companyInfo.foundedYear && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Gründungsjahr</p>
+                                <p className="font-medium">{companyInfo.foundedYear}</p>
+                              </div>
+                            )}
+                            {companyInfo.numberOfEmployees && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Mitarbeiter</p>
+                                <p className="font-medium">{companyInfo.numberOfEmployees}</p>
+                              </div>
+                            )}
+                            {companyInfo.location && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Standort</p>
+                                <p className="font-medium">{companyInfo.location}</p>
+                              </div>
+                            )}
                             {companyInfo.website && (
                               <div>
-                                <p className="text-sm font-semibold text-muted-foreground flex items-center gap-1 mb-1">
-                                  <Globe className="h-3 w-3" />
-                                  Website
-                                </p>
-                                <a href={companyInfo.website} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                                <p className="text-sm text-muted-foreground">Website</p>
+                                <a href={companyInfo.website} target="_blank" rel="noopener noreferrer" className="font-medium text-accent hover:underline">
                                   {companyInfo.website}
                                 </a>
                               </div>
                             )}
-                            {companyInfo.description && (
-                              <div>
-                                <p className="text-sm font-semibold text-muted-foreground mb-1">Beschreibung</p>
-                                <p className="text-sm">{companyInfo.description}</p>
-                              </div>
-                            )}
-                          </>
+                          </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground">Keine Firmeninformationen verfügbar</p>
+                          <p className="text-muted-foreground">Keine Firmeninformationen verfügbar</p>
+                        )}
+                        {companyInfo?.description && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-2">Beschreibung</p>
+                            <p className="text-sm">{companyInfo.description}</p>
+                          </div>
                         )}
                       </CardContent>
                     </Card>
                   </TabsContent>
 
-                  <TabsContent value="processes" className="space-y-4">
-                    {processes && processes.length > 0 ? (
-                      processes.map((process, index) => (
-                        <Card key={process.id}>
-                          <CardHeader>
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <CardTitle className="flex items-center gap-2">
-                                  {process.processName}
-                                  <Badge variant={getPriorityColor(process.priority || "medium")}>
-                                    {process.priority}
-                                  </Badge>
-                                </CardTitle>
-                                {process.category && (
-                                  <CardDescription>{process.category}</CardDescription>
+                  {/* Processes Tab */}
+                  <TabsContent value="processes">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5" />
+                          Geschäftsprozesse
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {processes && processes.length > 0 ? (
+                          <div className="space-y-6">
+                            {processes.map((process, index) => (
+                              <div key={index} className="border-l-4 border-accent pl-4">
+                                <h4 className="font-semibold mb-2">{process.processName}</h4>
+                                {process.description && (
+                                  <div className="mb-3">
+                                    <p className="text-sm text-muted-foreground">Beschreibung</p>
+                                    <p className="text-sm">{process.description}</p>
+                                  </div>
                                 )}
+                                {process.currentState && (
+                                  <div className="mb-3">
+                                    <p className="text-sm text-muted-foreground">IST-Zustand</p>
+                                    <p className="text-sm">{process.currentState}</p>
+                                  </div>
+                                )}
+                                {process.painPoints && (
+                                  <div className="mb-3">
+                                    <p className="text-sm text-muted-foreground">Schmerzpunkte</p>
+                                    <p className="text-sm">{process.painPoints}</p>
+                                  </div>
+                                )}
+                                {process.desiredState && (
+                                  <div className="mb-3">
+                                    <p className="text-sm text-muted-foreground">SOLL-Zustand</p>
+                                    <p className="text-sm">{process.desiredState}</p>
+                                  </div>
+                                )}
+                                <Badge variant={getPriorityColor(process.priority)}>
+                                  {process.priority}
+                                </Badge>
                               </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            {process.description && (
-                              <div>
-                                <p className="text-sm font-semibold mb-1">Beschreibung</p>
-                                <p className="text-sm text-muted-foreground">{process.description}</p>
-                              </div>
-                            )}
-                            <Separator />
-                            {process.currentState && (
-                              <div>
-                                <p className="text-sm font-semibold mb-1">IST-Zustand</p>
-                                <p className="text-sm">{process.currentState}</p>
-                              </div>
-                            )}
-                            {process.painPoints && (
-                              <div className="bg-destructive/10 p-3 rounded-lg">
-                                <p className="text-sm font-semibold mb-1 text-destructive">Schmerzpunkte</p>
-                                <p className="text-sm">{process.painPoints}</p>
-                              </div>
-                            )}
-                            {process.desiredState && (
-                              <div className="bg-green-50 p-3 rounded-lg">
-                                <p className="text-sm font-semibold mb-1 text-green-700">SOLL-Zustand</p>
-                                <p className="text-sm">{process.desiredState}</p>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          Keine Prozesse dokumentiert
-                        </CardContent>
-                      </Card>
-                    )}
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">Keine Prozesse erfasst</p>
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
 
-                  <TabsContent value="goals" className="space-y-4">
-                    {goals && goals.length > 0 ? (
-                      goals.map((goal) => (
-                        <Card key={goal.id}>
-                          <CardHeader>
-                            <div className="flex items-start justify-between">
-                              <CardTitle className="flex-1">{goal.title}</CardTitle>
-                              <div className="flex gap-2">
-                                <Badge variant="outline">{getGoalTypeLabel(goal.goalType)}</Badge>
-                                <Badge variant={getPriorityColor(goal.priority || "medium")}>
+                  {/* Goals Tab */}
+                  <TabsContent value="goals">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Target className="h-5 w-5" />
+                          Ziele & Wünsche
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {goals && goals.length > 0 ? (
+                          <div className="space-y-4">
+                            {goals.map((goal, index) => (
+                              <div key={index} className="border rounded-lg p-4">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold">{goal.title}</h4>
+                                  <Badge variant="outline">{getGoalTypeLabel(goal.goalType)}</Badge>
+                                </div>
+                                {goal.description && (
+                                  <p className="text-sm text-muted-foreground mb-2">{goal.description}</p>
+                                )}
+                                <Badge variant={getPriorityColor(goal.priority)}>
                                   {goal.priority}
                                 </Badge>
                               </div>
-                            </div>
-                          </CardHeader>
-                          {goal.description && (
-                            <CardContent>
-                              <p className="text-sm">{goal.description}</p>
-                            </CardContent>
-                          )}
-                        </Card>
-                      ))
-                    ) : (
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          Keine Ziele definiert
-                        </CardContent>
-                      </Card>
-                    )}
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">Keine Ziele erfasst</p>
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
 
-                  <TabsContent value="values" className="space-y-4">
-                    {values && values.length > 0 ? (
-                      values.map((value) => (
-                        <Card key={value.id}>
-                          <CardHeader>
-                            <div className="flex items-start justify-between">
-                              <CardTitle>{value.valueName}</CardTitle>
-                              <Badge variant="outline">
-                                {value.importance}/10
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            {value.description && (
-                              <div>
-                                <p className="text-sm font-semibold mb-1">Beschreibung</p>
-                                <p className="text-sm">{value.description}</p>
+                  {/* Values Tab */}
+                  <TabsContent value="values">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Lightbulb className="h-5 w-5" />
+                          Unternehmenswerte
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {values && values.length > 0 ? (
+                          <div className="space-y-4">
+                            {values.map((value, index) => (
+                              <div key={index} className="border rounded-lg p-4">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold">{value.valueName}</h4>
+                                  <span className="text-sm font-medium text-accent">{value.importance}/10</span>
+                                </div>
+                                {value.description && (
+                                  <p className="text-sm text-muted-foreground mb-2">{value.description}</p>
+                                )}
+                                {value.examples && (
+                                  <p className="text-sm"><span className="font-medium">Beispiele:</span> {value.examples}</p>
+                                )}
                               </div>
-                            )}
-                            {value.examples && (
-                              <div>
-                                <p className="text-sm font-semibold mb-1">Beispiele</p>
-                                <p className="text-sm text-muted-foreground">{value.examples}</p>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          Keine Werte erfasst
-                        </CardContent>
-                      </Card>
-                    )}
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">Keine Werte erfasst</p>
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                 </Tabs>
               </div>
