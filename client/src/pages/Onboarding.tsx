@@ -49,7 +49,7 @@ export default function Onboarding() {
   const [clientPhone, setClientPhone] = useState("");
   
   // Step 2: Company Information
-  const [companyName, setCompanyName] = useState("");
+  const [companyName, setCompanyName] = useState("Waldhauser Sanitär & Heizung");
   const [industry, setIndustry] = useState("");
   const [foundedYear, setFoundedYear] = useState("");
   const [numberOfEmployees, setNumberOfEmployees] = useState("");
