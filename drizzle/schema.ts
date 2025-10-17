@@ -108,3 +108,109 @@ export const companyValues = mysqlTable("company_values", {
 export type CompanyValue = typeof companyValues.$inferSelect;
 export type InsertCompanyValue = typeof companyValues.$inferInsert;
 
+/**
+ * Products and services offered
+ */
+export const products = mysqlTable("products", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }),
+  description: text("description"),
+  unitPrice: int("unitPrice"),
+  unit: varchar("unit", { length: 50 }),
+  isService: boolean("isService").default(false),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+
+/**
+ * Suppliers and vendors
+ */
+export const suppliers = mysqlTable("suppliers", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  supplierName: varchar("supplierName", { length: 255 }).notNull(),
+  contactPerson: varchar("contactPerson", { length: 255 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 50 }),
+  products: text("products"),
+  paymentTerms: varchar("paymentTerms", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type InsertSupplier = typeof suppliers.$inferInsert;
+
+/**
+ * Team members and roles
+ */
+export const teamMembers = mysqlTable("team_members", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  memberName: varchar("memberName", { length: 255 }).notNull(),
+  role: varchar("role", { length: 100 }),
+  responsibilities: text("responsibilities"),
+  email: varchar("email", { length: 320 }),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = typeof teamMembers.$inferInsert;
+
+/**
+ * Current software and tools
+ */
+export const currentSoftware = mysqlTable("current_software", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  softwareName: varchar("softwareName", { length: 255 }).notNull(),
+  purpose: varchar("purpose", { length: 255 }),
+  usersCount: int("usersCount"),
+  monthlyCost: int("monthlyCost"),
+  satisfactionLevel: int("satisfactionLevel"),
+  needsReplacement: boolean("needsReplacement").default(false),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type CurrentSoftware = typeof currentSoftware.$inferSelect;
+export type InsertCurrentSoftware = typeof currentSoftware.$inferInsert;
+
+/**
+ * Uploaded documents
+ */
+export const documents = mysqlTable("documents", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  documentType: varchar("documentType", { length: 100 }).notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileUrl: varchar("fileUrl", { length: 1000 }).notNull(),
+  fileSize: int("fileSize"),
+  mimeType: varchar("mimeType", { length: 100 }),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type Document = typeof documents.$inferSelect;
+export type InsertDocument = typeof documents.$inferInsert;
+
+/**
+ * Chat messages with AI assistant
+ */
+export const chatMessages = mysqlTable("chat_messages", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+

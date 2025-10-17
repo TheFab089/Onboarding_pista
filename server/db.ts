@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, 
@@ -12,7 +12,19 @@ import {
   goalsAndWishes,
   InsertGoalAndWish,
   companyValues,
-  InsertCompanyValue
+  InsertCompanyValue,
+  products,
+  InsertProduct,
+  suppliers,
+  InsertSupplier,
+  teamMembers,
+  InsertTeamMember,
+  currentSoftware,
+  InsertCurrentSoftware,
+  documents,
+  InsertDocument,
+  chatMessages,
+  InsertChatMessage
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -97,7 +109,7 @@ export async function getUser(id: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// Onboarding session helpers
+// Onboarding Sessions
 export async function createOnboardingSession(session: InsertOnboardingSession) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -114,28 +126,26 @@ export async function getOnboardingSession(id: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function updateOnboardingSession(id: string, data: Partial<InsertOnboardingSession>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.update(onboardingSessions).set({ ...data, updatedAt: new Date() }).where(eq(onboardingSessions.id, id));
-}
-
 export async function getAllOnboardingSessions() {
   const db = await getDb();
   if (!db) return [];
   
-  return await db.select().from(onboardingSessions).orderBy(desc(onboardingSessions.createdAt));
+  return await db.select().from(onboardingSessions);
 }
 
-// Company info helpers
+export async function updateOnboardingSession(id: string, updates: Partial<InsertOnboardingSession>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(onboardingSessions).set(updates).where(eq(onboardingSessions.id, id));
+}
+
+// Company Info
 export async function upsertCompanyInfo(info: InsertCompanyInfo) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.insert(companyInfo).values(info).onDuplicateKeyUpdate({
-    set: { ...info, updatedAt: new Date() }
-  });
+  await db.insert(companyInfo).values(info).onDuplicateKeyUpdate({ set: info });
 }
 
 export async function getCompanyInfoBySession(sessionId: string) {
@@ -146,7 +156,7 @@ export async function getCompanyInfoBySession(sessionId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// Business process helpers
+// Business Processes
 export async function createBusinessProcess(process: InsertBusinessProcess) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -161,21 +171,7 @@ export async function getBusinessProcessesBySession(sessionId: string) {
   return await db.select().from(businessProcesses).where(eq(businessProcesses.sessionId, sessionId));
 }
 
-export async function updateBusinessProcess(id: string, data: Partial<InsertBusinessProcess>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.update(businessProcesses).set({ ...data, updatedAt: new Date() }).where(eq(businessProcesses.id, id));
-}
-
-export async function deleteBusinessProcess(id: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.delete(businessProcesses).where(eq(businessProcesses.id, id));
-}
-
-// Goals and wishes helpers
+// Goals and Wishes
 export async function createGoalAndWish(goal: InsertGoalAndWish) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -190,21 +186,7 @@ export async function getGoalsAndWishesBySession(sessionId: string) {
   return await db.select().from(goalsAndWishes).where(eq(goalsAndWishes.sessionId, sessionId));
 }
 
-export async function updateGoalAndWish(id: string, data: Partial<InsertGoalAndWish>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.update(goalsAndWishes).set({ ...data, updatedAt: new Date() }).where(eq(goalsAndWishes.id, id));
-}
-
-export async function deleteGoalAndWish(id: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.delete(goalsAndWishes).where(eq(goalsAndWishes.id, id));
-}
-
-// Company values helpers
+// Company Values
 export async function createCompanyValue(value: InsertCompanyValue) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -219,17 +201,128 @@ export async function getCompanyValuesBySession(sessionId: string) {
   return await db.select().from(companyValues).where(eq(companyValues.sessionId, sessionId));
 }
 
-export async function updateCompanyValue(id: string, data: Partial<InsertCompanyValue>) {
+// Products
+export async function createProduct(product: InsertProduct) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.update(companyValues).set({ ...data, updatedAt: new Date() }).where(eq(companyValues.id, id));
+  await db.insert(products).values(product);
 }
 
-export async function deleteCompanyValue(id: string) {
+export async function getProductsBySession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(products).where(eq(products.sessionId, sessionId));
+}
+
+export async function deleteProduct(id: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.delete(companyValues).where(eq(companyValues.id, id));
+  await db.delete(products).where(eq(products.id, id));
+}
+
+// Suppliers
+export async function createSupplier(supplier: InsertSupplier) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(suppliers).values(supplier);
+}
+
+export async function getSuppliersBySession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(suppliers).where(eq(suppliers.sessionId, sessionId));
+}
+
+export async function deleteSupplier(id: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(suppliers).where(eq(suppliers.id, id));
+}
+
+// Team Members
+export async function createTeamMember(member: InsertTeamMember) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(teamMembers).values(member);
+}
+
+export async function getTeamMembersBySession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(teamMembers).where(eq(teamMembers.sessionId, sessionId));
+}
+
+export async function deleteTeamMember(id: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(teamMembers).where(eq(teamMembers.id, id));
+}
+
+// Current Software
+export async function createCurrentSoftware(software: InsertCurrentSoftware) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(currentSoftware).values(software);
+}
+
+export async function getCurrentSoftwareBySession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(currentSoftware).where(eq(currentSoftware.sessionId, sessionId));
+}
+
+export async function deleteCurrentSoftware(id: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(currentSoftware).where(eq(currentSoftware.id, id));
+}
+
+// Documents
+export async function createDocument(document: InsertDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(documents).values(document);
+}
+
+export async function getDocumentsBySession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(documents).where(eq(documents.sessionId, sessionId));
+}
+
+export async function deleteDocument(id: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(documents).where(eq(documents.id, id));
+}
+
+// Chat Messages
+export async function createChatMessage(message: InsertChatMessage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(chatMessages).values(message);
+}
+
+export async function getChatMessagesBySession(sessionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(chatMessages).where(eq(chatMessages.sessionId, sessionId));
 }
 

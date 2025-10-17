@@ -12,8 +12,10 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Check } from "lucide-react";
 import ProcessDiagram from "@/components/ProcessDiagram";
 import ProcessAnalysis from "@/components/ProcessAnalysis";
+import DocumentUpload from "@/components/DocumentUpload";
+import AIChatbot from "@/components/AIChatbot";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 interface ProcessStep {
   id: string;
@@ -644,6 +646,54 @@ export default function Onboarding() {
               </Button>
               
               <Button 
+                onClick={async () => {
+                  if (values.length === 0) {
+                    toast.error("Bitte fügen Sie mindestens einen Wert hinzu");
+                    return;
+                  }
+                  const hasEmptyNames = values.some(v => !v.valueName.trim());
+                  if (hasEmptyNames) {
+                    toast.error("Bitte geben Sie für alle Werte einen Namen ein");
+                    return;
+                  }
+                  
+                  try {
+                    for (const value of values) {
+                      await createValueMutation.mutateAsync({
+                        sessionId,
+                        ...value,
+                      });
+                    }
+                    
+                    await updateSessionMutation.mutateAsync({ sessionId, currentStep: 6 });
+                    setCurrentStep(6);
+                    toast.success("Werte gespeichert");
+                  } catch (error) {
+                    toast.error("Fehler beim Speichern");
+                  }
+                }} 
+                className="w-full bg-primary hover:bg-primary/90"
+                disabled={createValueMutation.isPending}
+              >
+                {createValueMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Weiter
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {currentStep === 6 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Dokumente hochladen</CardTitle>
+              <CardDescription>
+                Laden Sie wichtige Dokumente hoch (Logo, Vorlagen, Preislisten etc.)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <DocumentUpload sessionId={sessionId} />
+              
+              <Button 
                 onClick={handleComplete} 
                 className="w-full bg-accent hover:bg-accent/90"
                 disabled={createValueMutation.isPending}
@@ -658,6 +708,8 @@ export default function Onboarding() {
             </CardContent>
           </Card>
         )}
+
+        {sessionId && <AIChatbot sessionId={sessionId} />}
       </div>
     </div>
   );

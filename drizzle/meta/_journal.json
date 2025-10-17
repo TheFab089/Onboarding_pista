@@ -15,6 +15,13 @@
       "when": 1760729320675,
       "tag": "0001_wandering_cerebro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1760730488066,
+      "tag": "0002_last_the_order",
+      "breakpoints": true
     }
   ]
 }
