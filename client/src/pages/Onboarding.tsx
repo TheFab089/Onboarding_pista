@@ -95,6 +95,9 @@ export default function Onboarding() {
   
   // Step 10: Go-Live Planning
   const [goLivePlan, setGoLivePlan] = useState<any>({});
+  
+  // Additional Notes
+  const [additionalNotes, setAdditionalNotes] = useState("");
 
   const createSessionMutation = trpc.onboarding.createSession.useMutation();
   const updateSessionMutation = trpc.onboarding.updateSession.useMutation();
@@ -795,6 +798,24 @@ export default function Onboarding() {
         {currentStep === 11 && (
           <div className="space-y-6">
             <GoLivePlanning onPlanChange={setGoLivePlan} />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Zusätzliche Wünsche & Ideen</CardTitle>
+                <CardDescription>
+                  Gibt es noch weitere Punkte, Wünsche oder Ideen, die Sie mit uns besprechen möchten?
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder="Schreiben Sie hier alle zusätzlichen Wünsche, Ideen oder Anmerkungen auf..."
+                  value={additionalNotes}
+                  onChange={(e) => setAdditionalNotes(e.target.value)}
+                  className="min-h-32"
+                />
+              </CardContent>
+            </Card>
+            
             <div className="flex gap-4">
               <Button 
                 variant="outline"
