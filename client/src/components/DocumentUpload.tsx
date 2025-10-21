@@ -123,7 +123,7 @@ export default function DocumentUpload({ sessionId }: DocumentUploadProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Dokumenttyp</Label>
               <Select value={selectedType} onValueChange={setSelectedType}>

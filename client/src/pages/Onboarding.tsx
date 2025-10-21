@@ -357,7 +357,7 @@ export default function Onboarding() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="companyName">Firmenname *</Label>
                   <Input
@@ -493,7 +493,7 @@ export default function Onboarding() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-3 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label>Typ *</Label>
                         <Select

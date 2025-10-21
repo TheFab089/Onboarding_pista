@@ -225,7 +225,7 @@ export default function WorkflowAutomation({ onAutomationsChange }: WorkflowAuto
                                 {automation.description}
                               </p>
                               
-                              <div className="grid grid-cols-2 gap-3 text-xs">
+                              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 text-xs">
                                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
                                   <p className="font-semibold text-blue-800 mb-1">Auslöser:</p>
                                   <p className="text-blue-600">{automation.trigger}</p>
@@ -239,7 +239,7 @@ export default function WorkflowAutomation({ onAutomationsChange }: WorkflowAuto
                               {automation.enabled && automation.config && (
                                 <div className="mt-3 pt-3 border-t">
                                   <p className="text-xs font-semibold mb-2">Einstellungen:</p>
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                     {automation.config.days !== undefined && (
                                       <div>
                                         <Label className="text-xs">Tage</Label>

@@ -224,7 +224,7 @@ export default function ComponentsShowcase() {
             <h3 className="text-2xl font-semibold">Text Colors</h3>
             <Card>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
@@ -303,7 +303,7 @@ export default function ComponentsShowcase() {
             <h3 className="text-2xl font-semibold">Color Combinations</h3>
             <Card>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="bg-primary text-primary-foreground rounded-lg p-4">
                     <p className="font-medium mb-1">Primary</p>
                     <p className="text-sm opacity-90">
@@ -593,7 +593,7 @@ export default function ComponentsShowcase() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="month" className="text-sm font-medium">
                         Month
