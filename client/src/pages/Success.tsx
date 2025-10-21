@@ -52,8 +52,8 @@ export default function Success() {
                 Bei Fragen können Sie uns jederzeit kontaktieren:
               </p>
               <div className="space-y-1 text-sm">
-                <p className="text-muted-foreground">E-Mail: info@pista-consulting.de</p>
-                <p className="text-muted-foreground">Telefon: +49 123 456789</p>
+                <p className="text-muted-foreground">E-Mail: info@pista.consulting</p>
+                <p className="text-muted-foreground">Website: www.pista.consulting</p>
               </div>
             </div>
             

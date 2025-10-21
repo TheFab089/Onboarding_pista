@@ -46,7 +46,7 @@ export default function Onboarding() {
   // Step 1: Client Information
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
+
   
   // Step 2: Company Information
   const [companyName, setCompanyName] = useState("Waldhauser Sanitär & Heizung");
@@ -96,8 +96,16 @@ export default function Onboarding() {
   // Step 10: Go-Live Planning
   const [goLivePlan, setGoLivePlan] = useState<any>({});
   
-  // Additional Notes
+  // Additional Notes & Comments for each step
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [step1Comments, setStep1Comments] = useState("");
+  const [step2Comments, setStep2Comments] = useState("");
+  const [step3Comments, setStep3Comments] = useState("");
+  const [step6Comments, setStep6Comments] = useState("");
+  const [step7Comments, setStep7Comments] = useState("");
+  const [step8Comments, setStep8Comments] = useState("");
+  const [step9Comments, setStep9Comments] = useState("");
+  const [step10Comments, setStep10Comments] = useState("");
 
   const createSessionMutation = trpc.onboarding.createSession.useMutation();
   const updateSessionMutation = trpc.onboarding.updateSession.useMutation();
@@ -116,7 +124,7 @@ export default function Onboarding() {
       const result = await createSessionMutation.mutateAsync({
         clientName,
         clientEmail: clientEmail || undefined,
-        clientPhone: clientPhone || undefined,
+
       });
       
       setSessionId(result.sessionId);
@@ -328,17 +336,6 @@ export default function Onboarding() {
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="clientPhone">Telefon</Label>
-                <Input
-                  id="clientPhone"
-                  type="tel"
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="+49 123 456789"
-                />
-              </div>
-              
               <Button 
                 onClick={handleStartOnboarding} 
                 className="w-full bg-primary hover:bg-primary/90"
@@ -433,6 +430,17 @@ export default function Onboarding() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Beschreiben Sie Ihr Unternehmen, Ihre Dienstleistungen und was Sie besonders macht..."
                   rows={4}
+                />
+              </div>
+              
+              <div className="space-y-2 border-t pt-4">
+                <Label htmlFor="step2Comments">Zusätzliche Anmerkungen (optional)</Label>
+                <Textarea
+                  id="step2Comments"
+                  value={step2Comments}
+                  onChange={(e) => setStep2Comments(e.target.value)}
+                  placeholder="Haben Sie weitere Informationen, die Sie hinzufügen möchten?"
+                  rows={3}
                 />
               </div>
               
