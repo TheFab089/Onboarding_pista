@@ -287,7 +287,7 @@ export default function Onboarding() {
       <div className="container max-w-4xl">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <img src="/pista-logo.png" alt="PISTA Consulting" className="h-12" />
+            <img src="/pista-logo.png" alt="PISTA Consulting" className="h-12 bg-white rounded p-1" />
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Waldhauser Sanitär & Heizung</p>
               <p className="text-xs text-muted-foreground">Onboarding Portal</p>
