@@ -265,7 +265,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
               </div>
             ))}
             {showAddCRM && (
-              <Card className="border-2 border-dashed border-accent">
+              <Card className="border-2 border-dashed border-accent col-span-full">
                 <CardContent className="p-4 space-y-3">
                   <div>
                     <label className="text-sm font-medium">Phase Name *</label>
@@ -312,7 +312,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
               <Button
                 onClick={() => setShowAddCRM(true)}
                 variant="outline"
-                className="w-full border-dashed border-2"
+                className="w-full border-dashed border-2 col-span-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Eigene Phase hinzufügen
@@ -333,7 +333,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             {[...PROJECT_TYPES, ...customProjectTypes].map((type) => (
               <Card
                 key={type.id}
@@ -393,7 +393,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
               </Card>
             ))}
             {showAddProject && (
-              <Card className="border-2 border-dashed border-accent md:col-span-2">
+              <Card className="border-2 border-dashed border-accent col-span-full">
                 <CardContent className="p-4 space-y-3">
                   <div>
                     <label className="text-sm font-medium">Projekt-Typ Name *</label>
@@ -440,7 +440,7 @@ export default function ProcessDiagramCRM({ onConfirm }: ProcessDiagramCRMProps)
               <Button
                 onClick={() => setShowAddProject(true)}
                 variant="outline"
-                className="w-full border-dashed border-2 md:col-span-2"
+                className="w-full border-dashed border-2 col-span-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Eigenen Projekt-Typ hinzufügen
