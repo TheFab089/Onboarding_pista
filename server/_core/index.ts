@@ -35,7 +35,7 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
-  // tRPC API
+  // tRPC API - MUST be registered BEFORE static file serving
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -43,6 +43,13 @@ async function startServer() {
       createContext,
     })
   );
+
+  // 404 handler for unmatched API routes (BEFORE static file serving)
+  // This ensures API routes never get caught by SPA fallback
+  app.use("/api", (req, res) => {
+    res.status(404).json({ error: "API route not found" });
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
