@@ -58,15 +58,17 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve static files (CSS, JS, images, etc.)
+  app.use(express.static(distPath, { maxAge: "1h" }));
 
-  // fall through to index.html if the file doesn't exist (but not for API routes)
-  app.use("*", (req, res, next) => {
-    // Don't serve index.html for API routes - pass to next middleware
+  // SPA fallback: serve index.html for all non-API, non-static routes
+  app.get("*", (req, res) => {
+    // Don't serve index.html for API routes
     if (req.path.startsWith("/api/")) {
-      return next();
+      return res.status(404).json({ error: "Not found" });
     }
-    // For all other routes, serve index.html (SPA fallback)
+    
+    // Serve index.html for all other routes (SPA fallback)
     const indexPath = path.resolve(distPath, "index.html");
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
@@ -74,9 +76,5 @@ export function serveStatic(app: Express) {
       res.status(404).send("Not found");
     }
   });
-
-  // 404 handler for API routes that were not matched
-  app.use("/api", (req, res) => {
-    res.status(404).json({ error: "Not found" });
-  });
 }
+
